@@ -16,9 +16,9 @@ import urllib3
 from kubetest import errors, markers
 from kubetest.manager import KubetestManager
 
-GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
+GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS"
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 # A global instance of the KubetestManager. This will be used by various
 # pytest hooks and fixtures in order to create and manage the TestClient
@@ -30,6 +30,7 @@ manager = KubetestManager()
 
 # ********** pytest hooks **********
 
+
 def pytest_addoption(parser):
     """Add options to pytest to configure kubetest.
 
@@ -37,29 +38,29 @@ def pytest_addoption(parser):
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_addoption
     """
 
-    group = parser.getgroup('kubetest', 'kubernetes integration test support')
+    group = parser.getgroup("kubetest", "kubernetes integration test support")
     group.addoption(
-        '--kube-config',
-        action='store',
-        metavar='path',
+        "--kube-config",
+        action="store",
+        metavar="path",
         default=None,
         help=(
-            'the kubernetes config for kubetest; this is required for '
-            'resources to be installed on the cluster'
-        )
+            "the kubernetes config for kubetest; this is required for "
+            "resources to be installed on the cluster"
+        ),
     )
     group.addoption(
-        '--kube-context',
-        action='store',
-        metavar='context',
+        "--kube-context",
+        action="store",
+        metavar="context",
         default=None,
-        help='the name of the kubernetes config context to use',
+        help="the name of the kubernetes config context to use",
     )
     group.addoption(
-        '--kube-disable',
-        action='store_true',
+        "--kube-disable",
+        action="store_true",
         default=False,
-        help='[DEPRECATED] disable automatic configuration with the kubeconfig file'
+        help="[DEPRECATED] disable automatic configuration with the kubeconfig file",
     )
 
     # FIXME (etd) - this was an attempt to fix occasional permissions errors
@@ -74,26 +75,26 @@ def pytest_addoption(parser):
     # )
 
     group.addoption(
-        '--kube-log-level',
-        action='store',
-        default='warning',
-        help='log level for the kubetest logger'
+        "--kube-log-level",
+        action="store",
+        default="warning",
+        help="log level for the kubetest logger",
     )
 
     group.addoption(
-        '--kube-error-log-lines',
-        action='store',
+        "--kube-error-log-lines",
+        action="store",
         default=50,
-        help='set the number of lines to tail from container logs on error. '
-             'to show all lines, set this to -1.'
+        help="set the number of lines to tail from container logs on error. "
+        "to show all lines, set this to -1.",
     )
 
     group.addoption(
-        '--suppress-insecure-request',
-        action='store',
+        "--suppress-insecure-request",
+        action="store",
         default=False,
-        help='suppress the urllib3 InsecureRequestWarning. This is useful if testing '
-             'against a cluster without HTTPS set up.'
+        help="suppress the urllib3 InsecureRequestWarning. This is useful if testing "
+        "against a cluster without HTTPS set up.",
     )
 
 
@@ -103,17 +104,17 @@ def pytest_report_header(config):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_report_header
     """
-    config_file = config.getoption('kube_config')
+    config_file = config.getoption("kube_config")
     if config_file is None:
-        config_file = 'default'
+        config_file = "default"
 
-    context = config.getoption('kube_context')
+    context = config.getoption("kube_context")
     if context is None:
-        context = 'current context'
+        context = "current context"
 
     return [
-        'kubetest config file: {}'.format(config_file),
-        'kubetest context: {}'.format(context),
+        "kubetest config file: {}".format(config_file),
+        "kubetest context: {}".format(context),
     ]
 
 
@@ -129,7 +130,7 @@ def pytest_configure(config):
     markers.register(config)
 
     # Disable warnings, if configured to do so.
-    if config.getoption('suppress_insecure_request'):
+    if config.getoption("suppress_insecure_request"):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -152,17 +153,17 @@ def pytest_sessionstart(session):
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_sessionstart
     """
     # Setup the kubetest logger
-    log_level = session.config.getoption('kube_log_level')
+    log_level = session.config.getoption("kube_log_level")
     level = logging._nameToLevel.get(log_level.upper(), logging.WARNING)
-    logger = logging.getLogger('kubetest')
+    logger = logging.getLogger("kubetest")
     logger.setLevel(level)
 
     # Check for configuration deprecations
-    if session.config.getoption('kube_disable'):
+    if session.config.getoption("kube_disable"):
         warnings.warn(
-            '--kube-disable flag is deprecated (v0.2.0) and is no longer functional. '
-            'To disable the plugin for a project, see: '
-            'https://docs.pytest.org/en/latest/plugins.html',
+            "--kube-disable flag is deprecated (v0.2.0) and is no longer functional. "
+            "To disable the plugin for a project, see: "
+            "https://docs.pytest.org/en/latest/plugins.html"
         )
 
     # # Configure kubetest with the kubernetes config, if not disabled.
@@ -208,13 +209,10 @@ def pytest_runtest_setup(item):
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_setup
     """
     # Only create a managed test case if a kube-config is specified.
-    if item.config.getoption('kube_config'):
+    if item.config.getoption("kube_config"):
 
         # Register a new test case with the manager and setup the test case state.
-        test_case = manager.new_test(
-            node_id=item.nodeid,
-            test_name=item.name,
-        )
+        test_case = manager.new_test(node_id=item.nodeid, test_name=item.name)
 
         # Note: These markers are not applied right now, meaning that the resource(s)
         #  which they reference are not added to the cluster yet. They are just
@@ -248,7 +246,7 @@ def pytest_runtest_teardown(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    if item.config.getoption('kube_config'):
+    if item.config.getoption("kube_config"):
         manager.teardown(item.nodeid)
 
 
@@ -260,21 +258,19 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
-    if call.when == 'call':
+    if call.when == "call":
         if call.excinfo is not None:
-            tail_lines = item.config.getoption('kube_error_log_lines')
+            tail_lines = item.config.getoption("kube_error_log_lines")
             if tail_lines != 0:
                 test_case = manager.get_test(item.nodeid)
                 if test_case:
-                    logs = test_case.yield_container_logs(
-                        tail_lines=tail_lines
-                    )
+                    logs = test_case.yield_container_logs(tail_lines=tail_lines)
                     for container_log in logs:
                         # Add a report section to the test output
                         item.add_report_section(
                             when=call.when,
-                            key='kubernetes container logs',
-                            content=container_log
+                            key="kubernetes container logs",
+                            content=container_log,
                         )
 
 
@@ -292,38 +288,39 @@ def pytest_keyboard_interrupt():
             name = ns.metadata.name
             status = ns.status
             if (
-                    name.startswith('kubetest-') and
-                    status is not None and
-                    status.phase.lower() == 'active'
+                name.startswith("kubetest-")
+                and status is not None
+                and status.phase.lower() == "active"
             ):
                 print('keyboard interrupt: cleaning up namespace "{}"'.format(name))
                 kubernetes.client.CoreV1Api().delete_namespace(
-                    body=kubernetes.client.V1DeleteOptions(),
-                    name=name,
+                    body=kubernetes.client.V1DeleteOptions(), name=name
                 )
 
         crbs = kubernetes.client.RbacAuthorizationV1Api().list_cluster_role_binding()
         for crb in crbs.items:
             # if the cluster role binding has a 'kubetest:' prefix, remove it.
             name = crb.metadata.name
-            if name.startswith('kubetest:'):
+            if name.startswith("kubetest:"):
                 print(
-                    'keyboard interrupt: cleaning up clusterrolebinding "{}"'.format(crb)
+                    'keyboard interrupt: cleaning up clusterrolebinding "{}"'.format(
+                        crb
+                    )
                 )
                 kubernetes.client.RbacAuthorizationV1Api().delete_cluster_role_binding(
-                    body=kubernetes.client.V1DeleteOptions(),
-                    name=name,
+                    body=kubernetes.client.V1DeleteOptions(), name=name
                 )
     except Exception as e:
         log.error(
-            'Failed to clean up kubetest artifacts from cluster on keyboard interrupt. '
-            'You may need to manually remove items from your cluster. Check for '
+            "Failed to clean up kubetest artifacts from cluster on keyboard interrupt. "
+            "You may need to manually remove items from your cluster. Check for "
             'namespaces with the "kubetest-" prefix and cluster role bindings with '
             'the "kubetest:" prefix. ({})'.format(e)
         )
 
 
 # ********** pytest fixtures **********
+
 
 class ClusterInfo:
     """Information about the cluster the kubetest is being run on.
@@ -339,9 +336,9 @@ class ClusterInfo:
     """
 
     def __init__(self, current, config):
-        self.cluster = current['context']['cluster']
-        self.user = current['context']['user']
-        self.context = current['name']
+        self.cluster = current["context"]["cluster"]
+        self.user = current["context"]["user"]
+        self.context = current["name"]
         self.host = config.host
         self.verify_ssl = config.verify_ssl
 
@@ -358,22 +355,19 @@ def clusterinfo(request):
 
     # Get the current context.
     _, current = kubernetes.config.list_kube_config_contexts(
-        os.path.expandvars(os.path.expanduser(
-            request.session.config.getoption('kube_config')
-        ))
+        os.path.expandvars(
+            os.path.expanduser(request.session.config.getoption("kube_config"))
+        )
     )
 
-    return ClusterInfo(
-        current=current,
-        config=config,
-    )
+    return ClusterInfo(current=current, config=config)
 
 
 @pytest.fixture
 def kubeconfig(request):
     """Return the name of the configured kube config file loaded for the tests."""
 
-    config_file = request.session.config.getoption('kube_config')
+    config_file = request.session.config.getoption("kube_config")
     return config_file
 
 
@@ -383,26 +377,59 @@ def kube(kubeconfig, request):
 
     if not kubeconfig:
         log.error(
-            'kube fixture used when no --kube-config is set; unable to install test '
-            'resources onto a cluster.'
+            "kube fixture used when no --kube-config is set; unable to install test "
+            "resources onto a cluster."
         )
-        raise errors.SetupError('--kube-config not set')
+        raise errors.SetupError("--kube-config not set")
 
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
         log.error(
             'No kubetest client found for test using the "kube" fixture. ({})'.format(
-                request.node.nodeid,
+                request.node.nodeid
             )
         )
-        raise errors.SetupError('error generating test client')
+        raise errors.SetupError("error generating test client")
 
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.
     kubernetes.config.load_kube_config(
         config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-        context=request.session.config.getoption('kube_context'),
+        context=request.session.config.getoption("kube_context"),
     )
     test_case.setup()
 
     return test_case.client
+
+
+@pytest.fixture(scope="module")
+def kube_module(request):
+    """Return a client for managing a Kubernetes cluster for testing."""
+
+    kubeconfig = request.session.config.getoption("kube_config")
+
+    if not kubeconfig:
+        log.error(
+            "kube fixture used when no --kube-config is set; unable to install test "
+            "resources onto a cluster."
+        )
+        raise errors.SetupError("--kube-config not set")
+
+    module_environment = manager.new_test(request.node.nodeid, "kube_module")
+    if module_environment is None:
+        log.error(
+            'No kubetest client found for test using the "kube_module" fixture. ({})'.format(
+                request.node.nodeid
+            )
+        )
+        raise errors.SetupError("error generating test client")
+
+    # Setup the test case. This will create the namespace and any other
+    # objects (e.g. role bindings) that the test case will need.
+    kubernetes.config.load_kube_config(
+        config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+        context=request.session.config.getoption("kube_context"),
+    )
+    module_environment.setup()
+
+    return module_environment.client
