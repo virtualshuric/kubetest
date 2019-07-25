@@ -12,7 +12,7 @@ from kubernetes import client
 from kubetest import objects, utils
 from kubetest.condition import Condition, Policy, check_and_sort
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class TestClient:
@@ -43,7 +43,7 @@ class TestClient:
             objects.ClusterRoleBinding: The ClusterRoleBinding for the
             specified manifest.
         """
-        log.info('loading clusterrolebinding from path: %s', path)
+        log.info("loading clusterrolebinding from path: %s", path)
         clusterrolebinding = objects.ClusterRoleBinding.load(path)
         return clusterrolebinding
 
@@ -62,7 +62,7 @@ class TestClient:
         Returns:
             objects.ConfigMap: The ConfigMap for the specified manifest.
         """
-        log.info('loading configmap from path: %s', path)
+        log.info("loading configmap from path: %s", path)
         configmap = objects.ConfigMap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
@@ -83,7 +83,7 @@ class TestClient:
         Returns:
             objects.Deployment: The Deployment for the specified manifest.
         """
-        log.info('loading deployment from path: %s', path)
+        log.info("loading deployment from path: %s", path)
         deployment = objects.Deployment.load(path)
         if set_namespace:
             deployment.namespace = self.namespace
@@ -104,7 +104,7 @@ class TestClient:
         Returns:
             objects.StatefulSet: The StatefulSet for the specified manifest.
         """
-        log.info('loading statefulset from path: %s', path)
+        log.info("loading statefulset from path: %s", path)
         statefulset = objects.StatefulSet.load(path)
         if set_namespace:
             statefulset.namespace = self.namespace
@@ -125,7 +125,7 @@ class TestClient:
         Returns:
             objects.DaemonSet: The DaemonSet for the specified manifest.
         """
-        log.info('loading daemonset from path: %s', path)
+        log.info("loading daemonset from path: %s", path)
         daemonset = objects.DaemonSet.load(path)
         if set_namespace:
             daemonset.namespace = self.namespace
@@ -146,7 +146,7 @@ class TestClient:
         Returns:
             objects.Pod: The Pod for the specified manifest.
         """
-        log.info('loading pod from path: %s', path)
+        log.info("loading pod from path: %s", path)
         pod = objects.Pod.load(path)
         if set_namespace:
             pod.namespace = self.namespace
@@ -167,7 +167,7 @@ class TestClient:
         Returns:
             objects.RoleBinding: The RoleBinding for the specified manifest.
         """
-        log.info('loading rolebinding from path: %s', path)
+        log.info("loading rolebinding from path: %s", path)
         rolebinding = objects.RoleBinding.load(path)
         if set_namespace:
             rolebinding.namespace = self.namespace
@@ -188,7 +188,7 @@ class TestClient:
         Returns:
             objects.Secret: The Secret for the specified manifest.
         """
-        log.info('loading secret from path: %s', path)
+        log.info("loading secret from path: %s", path)
         secret = objects.Secret.load(path)
         if set_namespace:
             secret.namespace = self.namespace
@@ -209,7 +209,7 @@ class TestClient:
         Returns:
             objects.Service: The Service for the specified manifest.
         """
-        log.info('loading service from path: %s', path)
+        log.info("loading service from path: %s", path)
         service = objects.Service.load(path)
         if set_namespace:
             service.namespace = self.namespace
@@ -284,8 +284,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         deployment_list = client.AppsV1Api().list_namespaced_deployment(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         deployments = {}
@@ -319,8 +318,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         statefulset_list = client.AppsV1Api().list_namespaced_stateful_set(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         statefulsets = {}
@@ -354,8 +352,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         daemonset_list = client.AppsV1Api().list_namespaced_daemon_set(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         daemonsets = {}
@@ -389,8 +386,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         endpoints_list = client.CoreV1Api().list_namespaced_endpoints(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         endpoints = {}
@@ -424,8 +420,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         configmap_list = client.CoreV1Api().list_namespaced_config_map(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         configmaps = {}
@@ -459,8 +454,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         pod_list = client.CoreV1Api().list_namespaced_pod(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         pods = {}
@@ -494,8 +488,7 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         service_list = client.CoreV1Api().list_namespaced_service(
-            namespace=namespace,
-            **selectors,
+            namespace=namespace, **selectors
         )
 
         services = {}
@@ -523,9 +516,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        node_list = client.CoreV1Api().list_node(
-            **selectors,
-        )
+        node_list = client.CoreV1Api().list_node(**selectors)
 
         nodes = {}
         for obj in node_list.items:
@@ -554,13 +545,10 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            event_list = client.CoreV1Api().list_event_for_all_namespaces(
-                **selectors
-            )
+            event_list = client.CoreV1Api().list_event_for_all_namespaces(**selectors)
         else:
             event_list = client.CoreV1Api().list_namespaced_event(
-                namespace=self.namespace,
-                **selectors
+                namespace=self.namespace, **selectors
             )
 
         events = {}
@@ -574,7 +562,7 @@ class TestClient:
 
     @staticmethod
     def wait_for_conditions(
-            *args, timeout=None, interval=1, policy=Policy.ONCE, fail_on_api_error=True
+        *args, timeout=None, interval=1, policy=Policy.ONCE, fail_on_api_error=True
     ):
         """Wait for all of the provided Conditions to be met.
 
@@ -609,7 +597,7 @@ class TestClient:
 
         # If something was given, make sure they are all Conditions
         if not all(map(lambda c: isinstance(c, Condition), args)):
-            raise ValueError('All arguments must be a Condition')
+            raise ValueError("All arguments must be a Condition")
 
         # make a copy of the conditions
         to_check = list(args)
@@ -619,7 +607,7 @@ class TestClient:
             # condition checking policy
             met, unmet = check_and_sort(*conditions)
             if policy == Policy.ONCE:
-                log.info('check met: %s', met)
+                log.info("check met: %s", met)
                 conditions[:] = unmet
                 return len(unmet) == 0
 
@@ -628,14 +616,10 @@ class TestClient:
 
             else:
                 raise ValueError(
-                    'Invalid condition policy specified: {}'.format(policy)
+                    "Invalid condition policy specified: {}".format(policy)
                 )
 
-        wait_condition = Condition(
-            'wait for conditions',
-            condition_checker,
-            to_check,
-        )
+        wait_condition = Condition("wait for conditions", condition_checker, to_check)
 
         try:
             utils.wait_for_condition(
@@ -649,7 +633,7 @@ class TestClient:
             # that we weren't able to resolve in the error message, not
             # the 'wait for conditions' wrapper.
             raise TimeoutError(
-                'timed out wile waiting for conditions to be met: {}'.format(to_check)
+                "timed out wile waiting for conditions to be met: {}".format(to_check)
             )
 
     def wait_for_ready_nodes(self, count, timeout=None, interval=1):
@@ -666,20 +650,17 @@ class TestClient:
             interval (int|float): The time, in seconds, to sleep before
                 re-checking the number of nodes.
         """
+
         def node_count_match(node_count):
             nodes = self.get_nodes()
             return [n.is_ready() for n in nodes.values()].count(True) >= node_count
 
         wait_condition = Condition(
-            'wait for {} nodes'.format(count),
-            node_count_match,
-            count,
+            "wait for {} nodes".format(count), node_count_match, count
         )
 
         utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=interval,
+            condition=wait_condition, timeout=timeout, interval=interval
         )
 
     def wait_for_registered(self, timeout=None, interval=1):
@@ -696,6 +677,7 @@ class TestClient:
             interval (int|float): The time, in seconds, to sleep before
                 re-checking the ready state for pre-registered objects.
         """
+
         def check_registered():
             for obj in self.pre_registered:
                 if not obj.is_ready():
@@ -703,14 +685,11 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            'wait for pre-registered objects to be ready',
-            check_registered,
+            "wait for pre-registered objects to be ready", check_registered
         )
 
         utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=interval,
+            condition=wait_condition, timeout=timeout, interval=interval
         )
 
     @staticmethod
@@ -727,6 +706,7 @@ class TestClient:
             interval (int|float): The time, in seconds, to sleep before
                 re-checking the created state of the object.
         """
+
         def check_ready(api_obj):
             try:
                 api_obj.refresh()
@@ -735,13 +715,11 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            'wait for {}:{} to be created'.format(type(obj).__name__, obj.name),
+            "wait for {}:{} to be created".format(type(obj).__name__, obj.name),
             check_ready,
             obj,
         )
 
         utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=interval
+            condition=wait_condition, timeout=timeout, interval=interval
         )
