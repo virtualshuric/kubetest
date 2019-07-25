@@ -10,7 +10,7 @@ from kubetest import condition, response, utils
 from .api_object import ApiObject
 from .container import Container
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Pod(ApiObject):
@@ -28,10 +28,7 @@ class Pod(ApiObject):
 
     obj_type = client.V1Pod
 
-    api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
-    }
+    api_clients = {"preferred": client.CoreV1Api, "v1": client.CoreV1Api}
 
     def __str__(self):
         return str(self.obj)
@@ -52,11 +49,10 @@ class Pod(ApiObject):
             namespace = self.namespace
 
         log.info('creating pod "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('pod: %s', self.obj)
+        log.debug("pod: %s", self.obj)
 
         self.obj = self.api_client.create_namespaced_pod(
-            namespace=namespace,
-            body=self.obj,
+            namespace=namespace, body=self.obj
         )
 
     def delete(self, options):
@@ -76,20 +72,17 @@ class Pod(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info('deleting pod "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('pod: %s', self.obj)
+        log.debug("delete options: %s", options)
+        log.debug("pod: %s", self.obj)
 
         return self.api_client.delete_namespaced_pod(
-            name=self.name,
-            namespace=self.namespace,
-            body=options,
+            name=self.name, namespace=self.namespace, body=options
         )
 
     def refresh(self):
         """Refresh the underlying Kubernetes Pod resource."""
         self.obj = self.api_client.read_namespaced_pod_status(
-            name=self.name,
-            namespace=self.namespace,
+            name=self.name, namespace=self.namespace
         )
 
     def is_ready(self):
@@ -109,16 +102,16 @@ class Pod(ApiObject):
         # the 'failed' or 'success' state will no longer be running,
         # so we only care if the pod is in the 'running' state.
         phase = status.phase
-        if phase.lower() != 'running':
+        if phase.lower() != "running":
             return False
 
         for cond in status.conditions:
             # we only care about the condition type 'ready'
-            if cond.type.lower() != 'ready':
+            if cond.type.lower() != "ready":
                 continue
 
             # check that the readiness condition is True
-            return cond.status.lower() == 'true'
+            return cond.status.lower() == "true"
 
         # Catchall
         return False
@@ -177,7 +170,7 @@ class Pod(ApiObject):
 
         return total
 
-    def http_proxy_get(self, path, query_params=None):
+    def http_proxy_get(self, path, query_params=None, port=None):
         """Issue a GET request to a proxy for the Pod.
 
         Notes:
@@ -193,6 +186,7 @@ class Pod(ApiObject):
             path (str): The URI path for the request.
             query_params (dict[str, str]): Any query parameters for
                 the request. (default: None)
+            port (int): Optional port argument. If not specified, will be taken from containerPort or 80
 
         Returns:
             response.Response: The response data.
@@ -203,31 +197,34 @@ class Pod(ApiObject):
             query_params = {}
 
         path_params = {
-            'name': self.name,
-            'namespace': self.namespace
+            "name": "{}:{}".format(self.name, port) if port is not None else self.name,
+            "namespace": self.namespace,
         }
         header_params = {
-            'Accept': c.api_client.select_header_accept(['*/*']),
-            'Content-Type': c.api_client.select_header_content_type(['*/*'])
+            "Accept": c.api_client.select_header_accept(["*/*"]),
+            "Content-Type": c.api_client.select_header_content_type(["*/*"]),
         }
-        auth_settings = ['BearerToken']
+        auth_settings = ["BearerToken"]
 
         try:
-            resp = response.Response(*c.api_client.call_api(
-                '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'GET',
-                path_params=path_params,
-                query_params=query_params,
-                header_params=header_params,
-                body=None,
-                post_params=[],
-                files={},
-                response_type='str',
-                auth_settings=auth_settings,
-                _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=True,
-                _request_timeout=None,
-                collection_formats={}
-            ))
+            resp = response.Response(
+                *c.api_client.call_api(
+                    "/api/v1/namespaces/{namespace}/pods/{name}/proxy/" + path,
+                    "GET",
+                    path_params=path_params,
+                    query_params=query_params,
+                    header_params=header_params,
+                    body=None,
+                    post_params=[],
+                    files={},
+                    response_type="str",
+                    auth_settings=auth_settings,
+                    _return_http_data_only=False,  # we want all info, not just data
+                    _preload_content=True,
+                    _request_timeout=None,
+                    collection_formats={},
+                )
+            )
         except ApiException as e:
             # if the ApiException does not have a body or headers, that
             # means the raised exception did not get a response (even if
@@ -237,11 +234,7 @@ class Pod(ApiObject):
             if e.body is None and e.headers is None:
                 raise
 
-            resp = response.Response(
-                data=e.body,
-                status=e.status,
-                headers=e.headers,
-            )
+            resp = response.Response(data=e.body, status=e.status, headers=e.headers)
 
         return resp
 
@@ -290,12 +283,7 @@ class Pod(ApiObject):
             TimeoutError: The specified timeout was exceeded.
         """
         wait_condition = condition.Condition(
-            'all pod containers started',
-            self.containers_started,
+            "all pod containers started", self.containers_started
         )
 
-        utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=1,
-        )
+        utils.wait_for_condition(condition=wait_condition, timeout=timeout, interval=1)
